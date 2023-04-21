@@ -6,27 +6,32 @@ on:
       - 'V1.*.*'
 
 env:
-  DOCKERHUB_USERNAME: mariedugoua
-  DOCKERHUB_PASSWORD: Papa15maman17
   IMAGE_NAME: mariedugoua/tp9
 
 jobs:
   push:
     runs-on: ubuntu-latest
-
     steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
     - name: Login to Docker Hub
       uses: docker/login-action@v1
       with:
-        username: ${{ env.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_PASSWORD }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
 
     - name: Push Docker image
       uses: docker/build-push-action@v2
       with:
         context: .
         push: true
-        tags: ${{ env.IMAGE_NAME }}:tp9
-      env:
-        DOCKER_USERNAME: ${{ env.DOCKERHUB_USERNAME }}
-        DOCKER_PASSWORD: ${{ env.DOCKERHUB_PASSWORD }}
+        tags: ${{ steps.meta.outputs.tags}}
